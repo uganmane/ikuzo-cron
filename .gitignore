@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.tsbuildinfo
+.tmp/
+# 临时草稿文件（.tmp-env.txt / .tmp-proc.txt 之类），排查问题时容易忘了删
+.tmp-*
+# 项目级 .npmrc 可能含发布 token，绝不能提交
+.npmrc
+
+# 助理工作记忆：含邮箱、账号名等个人信息，不进公开仓库
+.workbuddy/

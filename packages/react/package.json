@@ -1,0 +1,68 @@
+{
+  "name": "cron-kit-react",
+  "version": "0.1.0",
+  "description": "React 版 Cron 表达式可视化组件：可在表单与弹窗中配置，实时给出中文描述与最近运行时间，零运行时依赖。",
+  "keywords": [
+    "cron",
+    "react",
+    "react-component",
+    "cron-expression",
+    "quartz",
+    "crontab",
+    "scheduler",
+    "form"
+  ],
+  "license": "MIT",
+  "author": "lixiang <zoroikuzo@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uganmane/ikuzo-cron.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/uganmane/ikuzo-cron/tree/main/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/uganmane/ikuzo-cron/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup && node ../../scripts/copy-styles.mjs react",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "cron-kit-core": "^0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "cron-kit-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "cron-kit —— Cron 表达式可视化组件库（Vue 3 / React 双端，零运行时依赖）",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uganmane/ikuzo-cron.git"
+  },
+  "homepage": "https://github.com/uganmane/ikuzo-cron#readme",
+  "bugs": {
+    "url": "https://github.com/uganmane/ikuzo-cron/issues"
+  },
+  "workspaces": [
+    "packages/*",
+    "playground/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w cron-kit-core && npm run build -w cron-kit-react && npm run build -w cron-kit-vue",
+    "build:core": "npm run build -w cron-kit-core",
+    "build:react": "npm run build -w cron-kit-react",
+    "build:vue": "npm run build -w cron-kit-vue",
+    "test": "npm run test:core && npm run test:ui",
+    "test:core": "npm run test:only -w cron-kit-core",
+    "test:ui": "node --test tests/ssr.test.mjs",
+    "typecheck": "npm run typecheck -w cron-kit-core && npm run typecheck -w cron-kit-react && npm run typecheck -w cron-kit-vue",
+    "dev:vue": "npm run dev -w playground-vue",
+    "dev:react": "npm run dev -w playground-react",
+    "dev": "npm run dev -w playground-vue",
+    "demo": "npm run build -w playground-react && npm run build -w playground-vue && node scripts/bundle-demo.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "verify": "npm run build && npm run typecheck && npm run test && npm run check:docs",
+    "clean": "node scripts/clean.mjs",
+    "publish:all": "npm run build && node scripts/publish.mjs",
+    "publish:core": "node scripts/publish.mjs core",
+    "publish:ui": "node scripts/publish.mjs react vue",
+    "verify:published": "node scripts/verify-published.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
