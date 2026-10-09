@@ -16,6 +16,7 @@ import {
   validateExpression,
   willEverRun,
 } from '../dist/index.js';
+import { CRON_KIT_CSS } from '../dist/styles.js';
 
 /** 取运行时间列表中的时刻文本 */
 const runs = (expression, syntax, extra = {}) =>
@@ -592,5 +593,25 @@ describe('栅格选区（单击与鼠标滑动框选）', () => {
   it('VERSION 与 package.json 对齐', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
     assert.equal(VERSION, pkg.version);
+  });
+});
+
+describe('共享样式', () => {
+  it('亮暗两套根节点都声明 color-scheme，原生控件不会串色', () => {
+    assert.match(CRON_KIT_CSS, /\.ck-root\s*\{[\s\S]*?color-scheme: light;/);
+    assert.match(CRON_KIT_CSS, /\.ck-root\[data-ck-theme='dark'\]\s*\{[\s\S]*?color-scheme: dark;/);
+    assert.match(CRON_KIT_CSS, /\.ck-root\[data-ck-theme='auto'\]\s*\{[\s\S]*?color-scheme: dark;/);
+  });
+
+  it('每个可滚动面板都显式给了滚动条配色', () => {
+    // 只写 scrollbar-width 时 Chrome 121+ 会忽略 ::-webkit-* ，转而用系统配色画滚动条，
+    // 暗色面板右侧就会露出一条白底——所以必须同时给 scrollbar-color。
+    const rule = CRON_KIT_CSS.match(/[^}]*\{[^}]*scrollbar-color:[^}]*\}/)?.[0] ?? '';
+    assert.match(rule, /scrollbar-width: thin;/);
+    assert.match(rule, /scrollbar-color: var\(--ck-border-strong\) transparent;/);
+
+    for (const selector of ['.ck-dropdown__list', '.ck-grid--scroll', '.ck-modal__body', '.ck-modal-mask']) {
+      assert.ok(rule.includes(selector), `${selector} 没有声明滚动条配色`);
+    }
   });
 });

@@ -36,6 +36,8 @@ export const CRON_KIT_CSS = `
   --ck-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif;
   --ck-gap: 12px;
+  /* 声明本区域的配色方案，原生控件（滚动条、输入光标等）才不会串色 */
+  color-scheme: light;
   color: var(--ck-text);
   font-family: var(--ck-font);
   font-size: 14px;
@@ -64,6 +66,7 @@ export const CRON_KIT_CSS = `
   --ck-warning: #f5a524;
   --ck-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   --ck-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -88,7 +91,39 @@ export const CRON_KIT_CSS = `
     --ck-warning: #f5a524;
     --ck-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     --ck-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
   }
+}
+
+/* ---------- 滚动条 ---------- */
+
+/* 必须显式声明颜色：只写 scrollbar-width 时 Chrome 121+ 会忽略 ::-webkit-* ，
+   转而用系统配色画滚动条，暗色面板右侧就会露出一条白底。 */
+.ck-dropdown__list,
+.ck-grid--scroll,
+.ck-modal__body,
+.ck-modal-mask {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ck-border-strong) transparent;
+}
+
+:is(.ck-dropdown__list, .ck-grid--scroll, .ck-modal__body, .ck-modal-mask)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:is(.ck-dropdown__list, .ck-grid--scroll, .ck-modal__body, .ck-modal-mask)::-webkit-scrollbar-track,
+:is(.ck-dropdown__list, .ck-grid--scroll, .ck-modal__body, .ck-modal-mask)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:is(.ck-dropdown__list, .ck-grid--scroll, .ck-modal__body, .ck-modal-mask)::-webkit-scrollbar-thumb {
+  background: var(--ck-border-strong);
+  border-radius: 999px;
+}
+
+:is(.ck-dropdown__list, .ck-grid--scroll, .ck-modal__body, .ck-modal-mask)::-webkit-scrollbar-thumb:hover {
+  background: var(--ck-text-faint);
 }
 
 .ck-root *,
@@ -589,20 +624,7 @@ export const CRON_KIT_CSS = `
 .ck-dropdown__list {
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
-.ck-dropdown__list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.ck-dropdown__list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ck-dropdown__list::-webkit-scrollbar-thumb {
-  background: var(--ck-border-strong);
-  border-radius: 999px;
+  padding-right: 2px;
 }
 
 .ck-dropdown__option {

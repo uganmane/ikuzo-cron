@@ -267,6 +267,7 @@ export function CronPanel(props: CronPanelProps) {
               value={state.expression}
               syntax={state.syntax}
               locale={locale}
+              theme={theme}
               disabled={disabled}
               onChange={(next) => state.setExpression(next)}
             />
@@ -277,12 +278,13 @@ export function CronPanel(props: CronPanelProps) {
               value={state.expression}
               syntax={state.syntax}
               locale={locale}
+              theme={theme}
               onSelect={(next) => state.setExpression(next)}
             />
           ) : null}
 
           {tab === 'explain' ? (
-            <CronExplain value={state.expression} syntax={state.syntax} locale={locale} />
+            <CronExplain value={state.expression} syntax={state.syntax} locale={locale} theme={theme} />
           ) : null}
         </div>
 
@@ -293,6 +295,7 @@ export function CronPanel(props: CronPanelProps) {
               syntax={state.syntax}
               timeZone={state.timeZone}
               locale={locale}
+              theme={theme}
               count={nextRunsCount}
             />
           </div>

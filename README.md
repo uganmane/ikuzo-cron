@@ -230,6 +230,16 @@ import 'cron-kit-react/style.css';
 }
 ```
 
+**滚动条也会跟着主题吗？**
+
+会。`.ck-root` 上声明了 `color-scheme`（亮色 `light`、暗色 `dark`），下拉面板、可选值栅格、弹窗这几个可滚动区域的滚动条统一按 `--ck-border-strong` 着色、轨道透明，暗色下不会露出系统白底。想更弱化或彻底去掉，覆写宿主样式即可：
+
+```css
+.ck-dropdown__list {
+  scrollbar-width: none; /* 去掉 */
+}
+```
+
 变量分五组：颜色（`--ck-primary` / `--ck-success` / `--ck-danger` / `--ck-warning` 及各自的 `-soft`、`-hover`、`-ring` 变体）、背景（`--ck-bg` / `--ck-bg-subtle` / `--ck-bg-hover` / `--ck-bg-elevated`）、文字（`--ck-text` / `--ck-text-muted` / `--ck-text-faint`）、边框与阴影（`--ck-border` / `--ck-border-strong` / `--ck-shadow` / `--ck-shadow-lg`）、排版（`--ck-font` / `--ck-mono` / `--ck-gap` / `--ck-radius` / `--ck-radius-sm`）。
 
 **运行时要求？**

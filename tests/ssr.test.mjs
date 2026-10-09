@@ -332,3 +332,51 @@ describe('两套组件的一致性', () => {
     }
   });
 });
+
+describe('主题透传', () => {
+  /** 取出所有带 ck-root 的开标签；这些元素各自重新声明了 --ck-* 变量 */
+  const rootTags = (html) =>
+    html.split('<').filter((tag) => /^[a-z]/i.test(tag) && tag.includes('ck-root'));
+
+  const assertAllDark = (html, label, min = 1) => {
+    const tags = rootTags(html);
+    assert.ok(tags.length >= min, `${label} 只渲染出 ${tags.length} 个 ck-root 组件`);
+    for (const tag of tags) {
+      assert.match(
+        tag,
+        /data-ck-theme="dark"/,
+        `${label} 里有子组件没跟随暗色主题（自带 ck-root 会退回亮色变量）：<${tag.slice(0, 90)}>`,
+      );
+    }
+  };
+
+  const PANEL_TABS = ['builder', 'expression', 'templates', 'explain'];
+
+  it('React 面板与它的每个子组件都跟随 theme', () => {
+    for (const tab of PANEL_TABS) {
+      assertAllDark(
+        renderReact(h(R.CronPanel, { value: QUARTZ, theme: 'dark', activeTab: tab })),
+        `React CronPanel[${tab}]`,
+        3,
+      );
+    }
+    assertAllDark(
+      renderReact(h(R.CronBuilder, { value: QUARTZ, theme: 'dark', layout: 'stack' })),
+      'React CronBuilder',
+    );
+  });
+
+  it('Vue 面板与它的每个子组件都跟随 theme', async () => {
+    for (const tab of PANEL_TABS) {
+      assertAllDark(
+        await renderVue(V.CronPanel, { modelValue: QUARTZ, theme: 'dark', activeTab: tab }),
+        `Vue CronPanel[${tab}]`,
+        3,
+      );
+    }
+    assertAllDark(
+      await renderVue(V.CronBuilder, { modelValue: QUARTZ, theme: 'dark', layout: 'stack' }),
+      'Vue CronBuilder',
+    );
+  });
+});
