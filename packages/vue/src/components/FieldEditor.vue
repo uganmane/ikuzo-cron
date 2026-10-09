@@ -14,6 +14,7 @@ import {
   type FieldValue,
 } from 'cron-kit-core';
 
+import Dropdown from './Dropdown.vue';
 import NumberInput from './NumberInput.vue';
 import OptionSelect from './OptionSelect.vue';
 
@@ -36,6 +37,9 @@ const modeOptions = computed(() => getModeOptions(props.fieldKey, props.syntax))
 const valueOptions = computed(() => getValueOptions(props.fieldKey, props.syntax, props.locale));
 // 月 / 周用带名称的栅格，其余数值字段用紧凑数字栅格
 const isGridField = computed(() => props.fieldKey === 'month' || props.fieldKey === 'week');
+
+/** 「当月第 N 个星期几」里的序数候选 */
+const NTH_OPTIONS = [1, 2, 3, 4, 5].map((item) => ({ value: item, label: String(item) }));
 
 const selectedList = computed(() => props.value?.list ?? []);
 
@@ -217,6 +221,7 @@ function modeLabel(label: string, labelEn: string) {
         :options="valueOptions"
         :locale="locale"
         :disabled="disabled"
+        :aria-label="locale === 'en-US' ? spec.labelEn + ' from' : spec.label + '起始值'"
         @update:model-value="(v: number) => emitPatch({ from: v })"
       />
       <NumberInput
@@ -234,6 +239,7 @@ function modeLabel(label: string, labelEn: string) {
         :options="valueOptions"
         :locale="locale"
         :disabled="disabled"
+        :aria-label="locale === 'en-US' ? spec.labelEn + ' to' : spec.label + '结束值'"
         @update:model-value="(v: number) => emitPatch({ to: v })"
       />
       <NumberInput
@@ -308,26 +314,28 @@ function modeLabel(label: string, labelEn: string) {
         :options="valueOptions"
         :locale="locale"
         :disabled="disabled"
+        :aria-label="locale === 'en-US' ? 'Weekday' : '星期几'"
         @update:model-value="(v: number) => emitPatch({ from: v, list: [v] })"
       />
     </div>
 
     <div v-if="mode === 'nthWeekday'" class="ck-inline">
       <span class="ck-label">当月第</span>
-      <select
-        class="ck-select"
-        :value="String(value?.nth ?? 1)"
+      <Dropdown
+        :model-value="value?.nth ?? 1"
+        :options="NTH_OPTIONS"
+        :locale="locale"
         :disabled="disabled"
-        @change="(e: Event) => emitPatch({ nth: Number((e.target as HTMLSelectElement).value) })"
-      >
-        <option v-for="item in [1, 2, 3, 4, 5]" :key="item" :value="item">{{ item }}</option>
-      </select>
+        :aria-label="locale === 'en-US' ? 'Nth occurrence' : '第几个'"
+        @update:model-value="(v: string | number) => emitPatch({ nth: Number(v) })"
+      />
       <span class="ck-label">个</span>
       <OptionSelect
         :model-value="value?.from"
         :options="valueOptions"
         :locale="locale"
         :disabled="disabled"
+        :aria-label="locale === 'en-US' ? 'Weekday' : '星期几'"
         @update:model-value="(v: number) => emitPatch({ from: v, list: [v] })"
       />
     </div>

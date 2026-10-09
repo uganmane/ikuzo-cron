@@ -455,6 +455,227 @@ export const CRON_KIT_CSS = `
   cursor: not-allowed;
 }
 
+/* ---------- 下拉选择（自绘面板，替代原生 select 的系统弹窗） ---------- */
+
+.ck-dropdown {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* 时区选择器：文案较长，别被 flex 压扁 */
+.ck-dropdown--tz {
+  min-width: 176px;
+}
+
+.ck-dropdown__trigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 88px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 6px 9px;
+  color: var(--ck-text);
+  background: var(--ck-bg-elevated);
+  border: 1px solid var(--ck-border-strong);
+  border-radius: var(--ck-radius-sm);
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ck-dropdown__trigger:hover:not(:disabled) {
+  border-color: var(--ck-primary);
+}
+
+.ck-dropdown__trigger:focus-visible,
+.ck-dropdown.is-open .ck-dropdown__trigger {
+  border-color: var(--ck-primary);
+  box-shadow: 0 0 0 3px var(--ck-primary-ring);
+}
+
+.ck-dropdown__trigger:disabled {
+  background: var(--ck-bg-subtle);
+  color: var(--ck-text-faint);
+  cursor: not-allowed;
+}
+
+.ck-dropdown__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ck-dropdown__value.is-placeholder {
+  color: var(--ck-text-faint);
+}
+
+.ck-dropdown__caret {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  color: var(--ck-text-faint);
+  transition: transform 0.18s, color 0.15s;
+}
+
+.ck-dropdown__caret svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ck-dropdown.is-open .ck-dropdown__caret {
+  color: var(--ck-primary);
+  transform: rotate(180deg);
+}
+
+.ck-dropdown__panel {
+  position: absolute;
+  left: 0;
+  z-index: 60;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+  max-width: 340px;
+  padding: 4px;
+  background: var(--ck-bg-elevated);
+  border: 1px solid var(--ck-border-strong);
+  border-radius: var(--ck-radius-sm);
+  box-shadow: var(--ck-shadow-lg);
+  animation: ck-dropdown-in 0.12s ease-out;
+}
+
+@keyframes ck-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ck-dropdown__search {
+  padding: 2px 2px 6px;
+}
+
+.ck-dropdown__search-input {
+  font: inherit;
+  font-size: 12.5px;
+  width: 100%;
+  padding: 5px 8px;
+  color: var(--ck-text);
+  background: var(--ck-bg-subtle);
+  border: 1px solid var(--ck-border);
+  border-radius: var(--ck-radius-sm);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ck-dropdown__search-input:focus {
+  border-color: var(--ck-primary);
+  box-shadow: 0 0 0 3px var(--ck-primary-ring);
+}
+
+.ck-dropdown__list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.ck-dropdown__list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ck-dropdown__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ck-dropdown__list::-webkit-scrollbar-thumb {
+  background: var(--ck-border-strong);
+  border-radius: 999px;
+}
+
+.ck-dropdown__option {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: var(--ck-text);
+  border-radius: var(--ck-radius-sm);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ck-dropdown__option:hover,
+.ck-dropdown__option.is-active {
+  background: var(--ck-bg-hover);
+}
+
+.ck-dropdown__option.is-selected {
+  color: var(--ck-primary);
+  font-weight: 600;
+}
+
+.ck-dropdown__option.is-selected.is-active {
+  background: var(--ck-primary-soft);
+}
+
+.ck-dropdown__option-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ck-dropdown__option-mark {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  color: var(--ck-primary);
+  opacity: 0;
+}
+
+.ck-dropdown__option-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ck-dropdown__option.is-selected .ck-dropdown__option-mark {
+  opacity: 1;
+}
+
+.ck-dropdown__empty {
+  padding: 10px 8px;
+  font-size: 12.5px;
+  color: var(--ck-text-faint);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-dropdown__panel {
+    animation: none;
+  }
+}
+
 .ck-input--num {
   width: 76px;
   font-family: var(--ck-mono);

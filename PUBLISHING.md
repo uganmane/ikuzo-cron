@@ -246,7 +246,7 @@ npm deprecate cron-kit-core@0.1.1 "该版本有缺陷，请升级到 0.1.2"
 ## 发布检查清单
 
 - [ ] 已满足 npm 的 2FA 要求（账号开启 2FA，或使用勾了 **Bypass 2FA** 的 granular access token）
-- [ ] `npm run verify` 全绿（build + typecheck + 60 项核心测试 + 23 项组件测试 + 文档自检）
+- [ ] `npm run verify` 全绿（build + typecheck + 60 项核心测试 + 27 项组件测试 + 文档自检）
 - [ ] `node scripts/publish.mjs --dry-run` 彩排通过，三个包清单里都有 `LICENSE` / `README.md` / `dist/`
 - [ ] `npm whoami --registry=https://registry.npmjs.org` 能输出用户名（确认登的是官方源）
 - [ ] 三个包的 `version` 已更新且一致，且该版本号在线上不存在

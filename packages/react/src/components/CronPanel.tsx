@@ -16,6 +16,7 @@ import { CronExplain } from './CronExplain';
 import { CronExpression } from './CronExpression';
 import { CronNextRuns } from './CronNextRuns';
 import { CronTemplates } from './CronTemplates';
+import { Dropdown } from './Dropdown';
 
 const TAB_LABELS: Record<CronPanelTab, { 'zh-CN': string; 'en-US': string }> = {
   builder: { 'zh-CN': '可视化配置', 'en-US': 'Builder' },
@@ -162,22 +163,17 @@ export function CronPanel(props: CronPanelProps) {
             ) : null}
 
             {showTimeZone ? (
-              <select
-                className="ck-select"
+              <Dropdown
+                className="ck-dropdown--tz"
                 value={state.timeZone}
+                options={COMMON_TIME_ZONES}
+                locale={locale}
                 disabled={disabled}
-                aria-label={t('时区', 'Time zone')}
-                onChange={(event) => state.setTimeZone(event.target.value)}
-              >
-                {COMMON_TIME_ZONES.some((item) => item.value === state.timeZone) ? null : (
-                  <option value={state.timeZone}>{state.timeZone}</option>
-                )}
-                {COMMON_TIME_ZONES.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
+                searchable
+                ariaLabel={t('时区', 'Time zone')}
+                searchPlaceholder={t('输入时区名称筛选…', 'Filter time zones…')}
+                onChange={state.setTimeZone}
+              />
             ) : null}
           </div>
         </div>

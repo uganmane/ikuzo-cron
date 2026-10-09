@@ -2,33 +2,36 @@
 import { computed } from 'vue';
 import type { CronLocale, ValueOption } from 'cron-kit-core';
 
+import Dropdown from './Dropdown.vue';
+
 const props = withDefaults(
   defineProps<{
     modelValue?: number;
     options: ValueOption[];
     locale?: CronLocale;
     disabled?: boolean;
+    ariaLabel?: string;
   }>(),
   { locale: 'zh-CN', disabled: false },
 );
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: number): void }>();
 
-const shown = computed(() => (props.modelValue === undefined ? '' : String(props.modelValue)));
+// 值可能还没设置，兜底显示第一项，与原生 select 在无匹配项时的表现一致
+const shown = computed(() => props.modelValue ?? props.options[0]?.value ?? 0);
 
-function onLabel(option: ValueOption): string {
-  return props.locale === 'en-US' ? option.labelEn : option.label;
-}
-
-function onChange(event: Event) {
-  emit('update:modelValue', Number((event.target as HTMLSelectElement).value));
+function onChange(value: string | number) {
+  emit('update:modelValue', Number(value));
 }
 </script>
 
 <template>
-  <select class="ck-select" :value="shown" :disabled="disabled" @change="onChange">
-    <option v-for="option in options" :key="option.value" :value="option.value">
-      {{ onLabel(option) }}
-    </option>
-  </select>
+  <Dropdown
+    :model-value="shown"
+    :options="options"
+    :locale="locale"
+    :disabled="disabled"
+    :aria-label="ariaLabel"
+    @update:model-value="onChange"
+  />
 </template>

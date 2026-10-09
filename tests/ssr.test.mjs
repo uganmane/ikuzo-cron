@@ -248,6 +248,54 @@ describe('按需组合子组件', () => {
       assert.match(html, /按住鼠标滑动可框选/, '提示里没有告诉用户可以拖拽框选');
     }
   });
+
+  it('「范围」模式的周与月改用自绘下拉，不再输出原生 select', () => {
+    // 默认的 tabs 布局一次只渲染一个字段，用 stack 让 7 个字段同时出现；
+    // 月取 1-6、周取 MON-FRI，两个字段都落在「范围」模式，各有两个下拉
+    const html = renderReact(
+      h(R.CronBuilder, { value: '0 0 9 ? 1-6 MON-FRI *', layout: 'stack' }),
+    );
+    assert.equal((html.match(/class="ck-dropdown"/g) ?? []).length, 4);
+    assert.doesNotMatch(html, /<select/, '不该再有原生 select');
+    // 自绘箭头 + listbox 语义，面板默认收起
+    assert.match(html, /ck-dropdown__caret/);
+    assert.match(html, /aria-haspopup="listbox"/);
+    assert.doesNotMatch(html, /ck-dropdown__panel/);
+  });
+
+  it('「第几个星期几」的序数与星期几也是自绘下拉', () => {
+    const html = renderReact(
+      h(R.CronBuilder, { value: '0 0 9 ? * MON#2 *', layout: 'stack' }),
+    );
+    assert.equal((html.match(/class="ck-dropdown"/g) ?? []).length, 2);
+    assert.match(html, /aria-label="第几个"/);
+    assert.match(html, /aria-label="星期几"/);
+    assert.doesNotMatch(html, /<select/);
+  });
+
+  it('时区选择换成自绘下拉，两端显示同一个当前值且无原生 select', async () => {
+    const reactHtml = renderReact(h(R.CronPanel, { value: QUARTZ }));
+    const vueHtml = await renderVue(V.CronPanel, { modelValue: QUARTZ });
+
+    for (const [name, html] of [
+      ['React', reactHtml],
+      ['Vue', vueHtml],
+    ]) {
+      assert.match(html, /ck-dropdown--tz/, `${name} 的时区不是自绘下拉`);
+      assert.match(html, /中国标准时间/, `${name} 的时区下拉没显示当前值`);
+      assert.doesNotMatch(html, /<select/, `${name} 仍有原生 select`);
+    }
+  });
+
+  it('两端渲染出的下拉结构一致', async () => {
+    const expression = '0 0 9 ? 1-6 MON-FRI *';
+    const reactHtml = renderReact(h(R.CronBuilder, { value: expression, layout: 'stack' }));
+    const vueHtml = await renderVue(V.CronBuilder, { modelValue: expression, layout: 'stack' });
+
+    const triggerCount = (html) => (html.match(/ck-dropdown__trigger/g) ?? []).length;
+    assert.equal(triggerCount(reactHtml), 4);
+    assert.equal(triggerCount(vueHtml), triggerCount(reactHtml));
+  });
 });
 
 describe('两套组件的一致性', () => {

@@ -17,6 +17,7 @@ import CronExplain from './CronExplain.vue';
 import CronExpression from './CronExpression.vue';
 import CronNextRuns from './CronNextRuns.vue';
 import CronTemplates from './CronTemplates.vue';
+import Dropdown from './Dropdown.vue';
 
 const TAB_LABELS: Record<CronPanelTab, { 'zh-CN': string; 'en-US': string }> = {
   builder: { 'zh-CN': '可视化配置', 'en-US': 'Builder' },
@@ -156,21 +157,18 @@ const syntaxSpec = computed(() => getSyntaxSpec(syntax.value));
           </button>
         </div>
 
-        <select
+        <Dropdown
           v-if="showTimeZone"
-          class="ck-select"
-          :value="timeZone"
+          class="ck-dropdown--tz"
+          :model-value="timeZone"
+          :options="timeZoneList"
+          :locale="locale"
           :disabled="disabled"
+          searchable
           :aria-label="t('时区', 'Time zone')"
-          @change="setTimeZone(($event.target as HTMLSelectElement).value)"
-        >
-          <option v-if="!timeZoneList.some((item) => item.value === timeZone)" :value="timeZone">
-            {{ timeZone }}
-          </option>
-          <option v-for="item in timeZoneList" :key="item.value" :value="item.value">
-            {{ item.label }}
-          </option>
-        </select>
+          :search-placeholder="t('输入时区名称筛选…', 'Filter time zones…')"
+          @update:model-value="(v: string | number) => setTimeZone(String(v))"
+        />
       </div>
     </div>
 

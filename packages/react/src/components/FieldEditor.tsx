@@ -14,6 +14,8 @@ import {
   type ValueOption,
 } from 'cron-kit-core';
 
+import { Dropdown } from './Dropdown';
+
 interface NumberInputProps {
   value?: number;
   min: number;
@@ -60,25 +62,26 @@ interface OptionSelectProps {
   options: ValueOption[];
   locale: CronLocale;
   disabled?: boolean;
+  ariaLabel?: string;
   onChange: (value: number) => void;
 }
 
-function OptionSelect({ value, options, locale, disabled, onChange }: OptionSelectProps) {
+/** 月 / 周这类带名称的字段，用自绘下拉选单个值 */
+function OptionSelect({ value, options, locale, disabled, ariaLabel, onChange }: OptionSelectProps) {
   return (
-    <select
-      className="ck-select"
-      value={value === undefined ? '' : String(value)}
+    <Dropdown
+      value={value ?? options[0]?.value ?? 0}
+      options={options}
+      locale={locale}
       disabled={disabled}
-      onChange={(event) => onChange(Number(event.target.value))}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {locale === 'en-US' ? option.labelEn : option.label}
-        </option>
-      ))}
-    </select>
+      ariaLabel={ariaLabel}
+      onChange={onChange}
+    />
   );
 }
+
+/** 「当月第 N 个星期几」里的序数候选 */
+const NTH_OPTIONS = [1, 2, 3, 4, 5].map((item) => ({ value: item, label: String(item) }));
 
 export interface FieldEditorProps {
   fieldKey: FieldKey;
@@ -285,6 +288,7 @@ export function FieldEditor({
               locale={locale}
               disabled={disabled}
               value={value?.from}
+              ariaLabel={locale === 'en-US' ? `${spec.labelEn} from` : `${spec.label}起始值`}
               onChange={(next) => emit({ from: next })}
             />
           ) : (
@@ -303,6 +307,7 @@ export function FieldEditor({
               locale={locale}
               disabled={disabled}
               value={value?.to}
+              ariaLabel={locale === 'en-US' ? `${spec.labelEn} to` : `${spec.label}结束值`}
               onChange={(next) => emit({ to: next })}
             />
           ) : (
@@ -388,6 +393,7 @@ export function FieldEditor({
             locale={locale}
             disabled={disabled}
             value={value?.from}
+            ariaLabel={locale === 'en-US' ? 'Weekday' : '星期几'}
             onChange={(next) => emit({ from: next, list: [next] })}
           />
         </div>
@@ -396,24 +402,21 @@ export function FieldEditor({
       {mode === 'nthWeekday' && (
         <div className="ck-inline">
           <span className="ck-label">当月第</span>
-          <select
-            className="ck-select"
-            value={String(value?.nth ?? 1)}
+          <Dropdown
+            value={value?.nth ?? 1}
+            options={NTH_OPTIONS}
+            locale={locale}
             disabled={disabled}
-            onChange={(event) => emit({ nth: Number(event.target.value) })}
-          >
-            {[1, 2, 3, 4, 5].map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+            ariaLabel={locale === 'en-US' ? 'Nth occurrence' : '第几个'}
+            onChange={(next) => emit({ nth: next })}
+          />
           <span className="ck-label">个</span>
           <OptionSelect
             options={valueOptions}
             locale={locale}
             disabled={disabled}
             value={value?.from}
+            ariaLabel={locale === 'en-US' ? 'Weekday' : '星期几'}
             onChange={(next) => emit({ from: next, list: [next] })}
           />
         </div>
