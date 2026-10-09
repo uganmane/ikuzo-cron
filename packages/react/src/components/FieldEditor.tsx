@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import {
+  applySelection,
   createFieldValue,
   getFieldSpec,
   getModeOptions,
@@ -88,6 +89,14 @@ export interface FieldEditorProps {
   onChange: (value: FieldValue) => void;
 }
 
+/** 鼠标滑动框选过程中的临时状态，松手才提交 */
+interface DragState {
+  /** 起手格子原本未选中 → 本次并入；原本已选中 → 本次移出 */
+  paint: boolean;
+  /** 拖拽过程中的实时选区，尚未回传给父组件 */
+  list: number[];
+}
+
 /** 单个字段的可视化编辑器 */
 export function FieldEditor({
   fieldKey,
@@ -104,14 +113,53 @@ export function FieldEditor({
   // 月 / 周用带名称的栅格，其余数值字段用紧凑数字栅格
   const isGridField = fieldKey === 'month' || fieldKey === 'week';
 
-  const selectedList = value?.list ?? [];
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  // mouseup 之后浏览器还会补发一次 click，记下时间点让那次 click 让位
+  const suppressClickAtRef = useRef(0);
+  // 全局监听在挂载时注册一次，用 ref 转发提交动作，避免闭包捕获过期的 props
+  const commitRef = useRef<(list: number[]) => void>(() => {});
+  commitRef.current = (list: number[]) => onChange({ mode: 'specific', list, from: list[0] });
+
+  // 划选期间先渲染本地草稿，松手才提交，免得每划一格都惊动父组件
+  const displayList = drag?.list ?? value?.list ?? [];
+  const currentList = value?.list ?? [];
   const selectedLabels = valueOptions
-    .filter((option) => selectedList.includes(option.value))
+    .filter((option) => displayList.includes(option.value))
     .map((option) => (locale === 'en-US' ? option.labelEn : option.label));
   const selectedText =
     selectedLabels.length > 12
       ? `${selectedLabels.slice(0, 12).join('、')} 等 ${selectedLabels.length} 个`
       : selectedLabels.join('、');
+  // 顺带把「可以拖拽框选」这件事写在提示里，否则用户不会知道
+  const hintText = selectedLabels.length
+    ? locale === 'en-US'
+      ? `Selected ${selectedLabels.length}: ${selectedText} · hold and drag to select`
+      : `已选 ${selectedLabels.length} 个：${selectedText}（按住鼠标滑动可框选）`
+    : locale === 'en-US'
+      ? 'Click, or hold and drag to select multiple values'
+      : '点击选择，或按住鼠标滑动框选';
+
+  useEffect(() => {
+    const finish = () => {
+      const active = dragRef.current;
+      if (!active) return;
+      dragRef.current = null;
+      setDrag(null);
+      suppressClickAtRef.current = Date.now();
+      commitRef.current(active.list);
+    };
+    // pointerup 与 mouseup 都会到；第二次进来时 dragRef 已清空，天然去重
+    window.addEventListener('mouseup', finish);
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('blur', finish);
+    return () => {
+      window.removeEventListener('mouseup', finish);
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('blur', finish);
+    };
+  }, []);
 
   const emit = (patch: Partial<FieldValue>) => {
     onChange({ ...(value ?? { mode }), ...patch, mode } as FieldValue);
@@ -121,14 +169,49 @@ export function FieldEditor({
     onChange(createFieldValue(nextMode, fieldKey, syntax));
   };
 
+  /** 按下即起手：把起手格子并入草稿，同时锁定本次是「并入」还是「移出」 */
+  const beginDrag = (item: number) => {
+    const paint = !currentList.includes(item);
+    const state: DragState = { paint, list: applySelection(currentList, [item], paint) };
+    dragRef.current = state;
+    setDrag(state);
+  };
+
+  const extendDrag = (item: number) => {
+    const active = dragRef.current;
+    if (!active) return;
+    const state: DragState = {
+      paint: active.paint,
+      list: applySelection(active.list, [item], active.paint),
+    };
+    dragRef.current = state;
+    setDrag(state);
+  };
+
+  /** 划过栅格上下边缘时自动滚动，方便一次框完秒字段的 0-59 */
+  const autoScrollWhileDragging = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const el = gridRef.current;
+    if (!el || el.scrollHeight <= el.clientHeight + 1) return;
+    const rect = el.getBoundingClientRect();
+    const edge = 24;
+    if (event.clientY < rect.top + edge) el.scrollTop -= 16;
+    else if (event.clientY > rect.bottom - edge) el.scrollTop += 16;
+  };
+
   const toggleGridValue = (item: number) => {
-    const current = value?.list ?? [];
-    // 至少保留一个值，否则该字段会变成空表达式
-    if (current.includes(item) && current.length === 1) return;
-    const next = current.includes(item)
-      ? current.filter((entry) => entry !== item)
-      : [...current, item];
-    onChange({ mode: 'specific', list: next, from: [...next].sort((a, b) => a - b)[0] });
+    // 移空会被 applySelection 拒绝（字段不能为空），此时 next 与 current 完全一致
+    const next = applySelection(currentList, [item], !currentList.includes(item));
+    if (next.length === currentList.length && next.every((entry, i) => entry === currentList[i])) {
+      return;
+    }
+    onChange({ mode: 'specific', list: next, from: next[0] });
+  };
+
+  /** 鼠标点选已被「按下起手 + 松手提交」覆盖，这里只服务键盘 Enter / 空格 */
+  const clickGridValue = (item: number) => {
+    if (Date.now() - suppressClickAtRef.current < 150) return;
+    toggleGridValue(item);
   };
 
   return (
@@ -162,16 +245,18 @@ export function FieldEditor({
       {mode === 'specific' && (
         <>
           <div
+            ref={gridRef}
+            onMouseMove={autoScrollWhileDragging}
             className={`ck-grid ${
               fieldKey === 'month'
                 ? 'ck-grid--12'
                 : fieldKey === 'week'
                   ? 'ck-grid--7'
                   : 'ck-grid--num'
-            }${valueOptions.length > 31 ? ' ck-grid--scroll' : ''}`}
+            }${valueOptions.length > 31 ? ' ck-grid--scroll' : ''}${drag ? ' is-dragging' : ''}`}
           >
             {valueOptions.map((option) => {
-              const active = selectedList.includes(option.value);
+              const active = displayList.includes(option.value);
               return (
                 <button
                   key={option.value}
@@ -179,16 +264,16 @@ export function FieldEditor({
                   aria-pressed={active}
                   className={`ck-check${active ? ' is-active' : ''}`}
                   disabled={disabled}
-                  onClick={() => toggleGridValue(option.value)}
+                  onMouseDown={() => beginDrag(option.value)}
+                  onMouseEnter={() => extendDrag(option.value)}
+                  onClick={() => clickGridValue(option.value)}
                 >
                   {locale === 'en-US' ? option.labelEn : option.label}
                 </button>
               );
             })}
           </div>
-          <span className="ck-hint">
-            {selectedLabels.length ? `已选 ${selectedLabels.length} 个：${selectedText}` : '点击上方数值进行多选'}
-          </span>
+          <span className="ck-hint">{hintText}</span>
         </>
       )}
 

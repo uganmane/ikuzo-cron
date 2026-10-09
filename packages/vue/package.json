@@ -1,6 +1,6 @@
 {
   "name": "cron-kit-vue",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Vue 3 版 Cron 表达式可视化组件：支持 v-model 与表单校验，可在弹窗中配置并回传表达式，零运行时依赖。",
   "keywords": [
     "cron",
@@ -49,7 +49,7 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "cron-kit-core": "^0.1.0"
+    "cron-kit-core": "^0.2.0"
   },
   "peerDependencies": {
     "vue": ">=3.2.0"

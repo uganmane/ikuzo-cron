@@ -196,6 +196,25 @@ export function getValueOptions(
   return options;
 }
 
+/**
+ * 把一组值按「涂色」语义并入 / 移出当前选区。
+ *
+ * 栅格的单击切换与鼠标滑动框选共用这一份逻辑：`paint` 为 `true` 表示把划过的值并入选区，
+ * 为 `false` 表示移出。**移空时会退回原选区** —— 该字段一旦为空就会变成非法表达式，
+ * 所以「至少保留一个值」这条约束在这里兜底，两端组件不必各写一遍。
+ *
+ * 返回值始终按升序去重，方便直接交给 `list` / `from`。
+ */
+export function applySelection(current: number[], values: number[], paint: boolean): number[] {
+  const merged = new Set(current);
+  for (const value of values) {
+    if (paint) merged.add(value);
+    else merged.delete(value);
+  }
+  const next = [...merged].sort((a, b) => a - b);
+  return next.length ? next : [...current].sort((a, b) => a - b);
+}
+
 /** 把配置渲染为字段文本，供编辑器实时预览 */
 export function previewField(
   key: FieldKey,

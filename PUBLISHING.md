@@ -138,7 +138,9 @@ npm version patch --no-git-tag-version -w cron-kit-react
 npm version patch --no-git-tag-version -w cron-kit-vue
 ```
 
-`cron-kit-react` / `cron-kit-vue` 对 core 的依赖写的是 `^0.1.0`。**只要还是 `0.x` 且没有破坏性变更，这个范围就不用动**；一旦出现不兼容改动，记得同步把依赖范围上抬。
+`cron-kit-react` / `cron-kit-vue` 对 core 的依赖写的是 `^0.2.0`。⚠️ **`0.x` 下 caret 只锁到 minor**：`^0.1.0` 等于 `>=0.1.0 <0.2.0`，**不覆盖 `0.2.0`**。所以每次抬 minor 都必须同步把两个 UI 包的依赖范围改成 `^<新的 minor>`，否则用户装 `cron-kit-react@0.2.0` 会连带拉到旧版 core（甚至因为找不到匹配版本而失败）。已用 `npm version minor` 从 `0.1.0` 升到 `0.2.0`，依赖范围同步改成了 `^0.2.0`。
+
+（仓库里的 `playground/*` 也是 workspace 依赖，同样要跟着抬 —— 范围不匹配时 npm 会跳过本地链接、改从 registry 装，那样调试的就不是本地代码了。）
 
 npm 不允许覆盖已发布的版本号。如果 `scripts/publish.mjs` 报「已存在于官方源」，就是这个原因 —— 升版本号，不是重试。
 
@@ -244,7 +246,7 @@ npm deprecate cron-kit-core@0.1.1 "该版本有缺陷，请升级到 0.1.2"
 ## 发布检查清单
 
 - [ ] 已满足 npm 的 2FA 要求（账号开启 2FA，或使用勾了 **Bypass 2FA** 的 granular access token）
-- [ ] `npm run verify` 全绿（build + typecheck + 53 项核心测试 + 22 项组件测试 + 文档自检）
+- [ ] `npm run verify` 全绿（build + typecheck + 60 项核心测试 + 23 项组件测试 + 文档自检）
 - [ ] `node scripts/publish.mjs --dry-run` 彩排通过，三个包清单里都有 `LICENSE` / `README.md` / `dist/`
 - [ ] `npm whoami --registry=https://registry.npmjs.org` 能输出用户名（确认登的是官方源）
 - [ ] 三个包的 `version` 已更新且一致，且该版本号在线上不存在

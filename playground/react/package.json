@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "cron-kit-core": "^0.1.0",
-    "cron-kit-react": "^0.1.0",
+    "cron-kit-core": "^0.2.0",
+    "cron-kit-react": "^0.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

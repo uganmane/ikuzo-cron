@@ -570,6 +570,8 @@ export const CRON_KIT_CSS = `
 .ck-grid {
   display: grid;
   gap: 6px;
+  /* 支持鼠标滑动框选，划过时不要选中文本 */
+  user-select: none;
 }
 
 .ck-grid--12 {
@@ -624,6 +626,15 @@ export const CRON_KIT_CSS = `
   border-color: var(--ck-primary);
   color: var(--ck-primary);
   font-weight: 600;
+}
+
+/* 鼠标滑动框选：起手后切十字光标；关掉过渡，长距离划过时跟手不打滑 */
+.ck-grid.is-dragging {
+  cursor: crosshair;
+}
+
+.ck-grid.is-dragging .ck-check {
+  transition: none;
 }
 
 /* ---------- 最近运行时间 ---------- */

@@ -223,6 +223,31 @@ describe('按需组合子组件', () => {
     assert.match(html, /ck-check is-active[^>]*>30</);
     assert.match(html, /已选 1 个：30/);
   });
+
+  it('「指定」栅格提示可拖拽框选，两端渲染一致', async () => {
+    const expression = '30 0 9 ? * MON-FRI *';
+    const reactHtml = renderReact(h(R.CronBuilder, { value: expression }));
+    const vueHtml = await renderVue(V.CronBuilder, { modelValue: expression });
+
+    const gridClasses = (html) => {
+      const matched = html.match(/class="([^"]*\bck-grid\b[^"]*)"/);
+      return [...new Set(matched[1].split(/\s+/))].sort();
+    };
+    // is-dragging 只在按住鼠标期间出现，服务端渲染不该带
+    const expected = ['ck-grid', 'ck-grid--num', 'ck-grid--scroll'];
+    assert.deepEqual(gridClasses(reactHtml), expected);
+    assert.deepEqual(gridClasses(vueHtml), expected);
+
+    // 选中态由同一份 displayList 推导，两端必须一致
+    const activeCells = (html) =>
+      [...html.matchAll(/ck-check is-active[^>]*>([^<]+)</g)].map((match) => match[1]);
+    assert.deepEqual(activeCells(reactHtml), ['30']);
+    assert.deepEqual(activeCells(vueHtml), activeCells(reactHtml));
+
+    for (const html of [reactHtml, vueHtml]) {
+      assert.match(html, /按住鼠标滑动可框选/, '提示里没有告诉用户可以拖拽框选');
+    }
+  });
 });
 
 describe('两套组件的一致性', () => {

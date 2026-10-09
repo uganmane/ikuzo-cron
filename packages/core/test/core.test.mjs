@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import {
+  VERSION,
+  applySelection,
   buildExpression,
   buildField,
   describeExpression,
@@ -548,4 +551,46 @@ describe('往返一致性', () => {
       assert.deepEqual(after, before, `${expression} → ${rebuilt} 语义发生变化`);
     });
   }
+});
+
+describe('栅格选区（单击与鼠标滑动框选）', () => {
+  // 单击切换与拖拽框选共用同一份「涂色」语义，React / Vue 两端都直接调它
+  it('paint=true 把划过的值并入选区，并去重排序', () => {
+    assert.deepEqual(applySelection([1, 5], [3, 1], true), [1, 3, 5]);
+    assert.deepEqual(applySelection([], [7], true), [7]);
+  });
+
+  it('paint=false 把划过的值移出选区', () => {
+    assert.deepEqual(applySelection([1, 2, 3, 4], [2, 3], false), [1, 4]);
+  });
+
+  it('移空时退回原选区（字段一旦为空就是非法表达式）', () => {
+    assert.deepEqual(applySelection([5], [5], false), [5]);
+    assert.deepEqual(applySelection([9], [1, 2, 9], false), [9]);
+  });
+
+  it('空选区上做移出仍是空', () => {
+    assert.deepEqual(applySelection([], [3], false), []);
+  });
+
+  it('一次划过一串连续值，与逐格操作结果相同', () => {
+    const dragged = [10, 11, 12, 13, 14, 15];
+    assert.deepEqual(applySelection([1], dragged, true), [1, 10, 11, 12, 13, 14, 15]);
+
+    let stepwise = [1];
+    for (const value of dragged) stepwise = applySelection(stepwise, [value], true);
+    assert.deepEqual(applySelection([1], dragged, true), stepwise);
+  });
+
+  it('不改写入参，返回新数组', () => {
+    const current = [1, 2];
+    const result = applySelection(current, [3], true);
+    assert.deepEqual(current, [1, 2]);
+    assert.notEqual(result, current);
+  });
+
+  it('VERSION 与 package.json 对齐', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    assert.equal(VERSION, pkg.version);
+  });
 });

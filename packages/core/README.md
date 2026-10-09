@@ -131,6 +131,7 @@ const rebuilt = buildExpression({ syntax: 'quartz', fields }, 'day');
 | --- | --- |
 | `getModeOptions(key, syntax?)` | 该字段可用的配置方式，返回 `{ mode, label, labelEn }[]`。基础四个模式为每秒/范围/周期/指定 |
 | `getValueOptions(key, syntax?, locale?)` | 该字段的可选值，返回 `{ value, label, labelEn }[]`（周字段 `value` 为 0=周日 … 6=周六） |
+| `applySelection(current, values, paint)` | 把一组值按「涂色」语义并入 / 移出选区，返回升序去重的**新数组**。`paint` 为 `true` 并入、`false` 移出；**移空时退回原选区**（字段一旦为空就是非法表达式）。栅格的单击切换与鼠标滑动框选共用这一份逻辑 |
 | `createFieldValue(mode, key, syntax?)` | 按模式创建默认字段值 |
 | `previewField(key, value, syntax?)` | 预览字段的最终字符串 |
 | `getExpressionTokens(expression, syntax?, locale?)` | 把表达式拆成与字段一一对应的 token（`{ key, label, value }[]`），用于逐字段标注与高亮；字段数与语法不匹配时返回 `[]` |

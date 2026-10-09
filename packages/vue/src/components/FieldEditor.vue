@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
+  applySelection,
   createFieldValue,
   getFieldSpec,
   getModeOptions,
@@ -37,15 +38,41 @@ const valueOptions = computed(() => getValueOptions(props.fieldKey, props.syntax
 const isGridField = computed(() => props.fieldKey === 'month' || props.fieldKey === 'week');
 
 const selectedList = computed(() => props.value?.list ?? []);
+
+interface DragState {
+  /** 起手格子原本未选中 → 本次并入；原本已选中 → 本次移出 */
+  paint: boolean;
+  /** 拖拽过程中的实时选区，尚未回传给父组件 */
+  list: number[];
+}
+
+const gridRef = ref<HTMLElement | null>(null);
+const drag = ref<DragState | null>(null);
+// mouseup 之后浏览器还会补发一次 click，记下时间点让那次 click 让位
+const suppressClickAt = ref(0);
+
+/** 划选期间先渲染本地草稿，松手才提交，免得每划一格都惊动父组件 */
+const displayList = computed(() => drag.value?.list ?? selectedList.value);
+
 const selectedLabels = computed(() =>
   valueOptions.value
-    .filter((option) => selectedList.value.includes(option.value))
+    .filter((option) => displayList.value.includes(option.value))
     .map((option) => (props.locale === 'en-US' ? option.labelEn : option.label)),
 );
 const selectedText = computed(() =>
   selectedLabels.value.length > 12
     ? `${selectedLabels.value.slice(0, 12).join('、')} 等 ${selectedLabels.value.length} 个`
     : selectedLabels.value.join('、'),
+);
+// 顺带把「可以拖拽框选」这件事写在提示里，否则用户不会知道
+const hintText = computed(() =>
+  selectedLabels.value.length
+    ? props.locale === 'en-US'
+      ? `Selected ${selectedLabels.value.length}: ${selectedText.value} · hold and drag to select`
+      : `已选 ${selectedLabels.value.length} 个：${selectedText.value}（按住鼠标滑动可框选）`
+    : props.locale === 'en-US'
+      ? 'Click, or hold and drag to select multiple values'
+      : '点击选择，或按住鼠标滑动框选',
 );
 
 /** 月 / 周用名称栅格，其余数值字段用紧凑数字栅格；值较多时限高滚动 */
@@ -65,17 +92,65 @@ function switchMode(nextMode: FieldMode) {
   emit('update', createFieldValue(nextMode, props.fieldKey, props.syntax));
 }
 
+/** 按下即起手：把起手格子并入草稿，同时锁定本次是「并入」还是「移出」 */
+function beginDrag(item: number) {
+  const current = props.value?.list ?? [];
+  const paint = !current.includes(item);
+  drag.value = { paint, list: applySelection(current, [item], paint) };
+}
+
+function extendDrag(item: number) {
+  const active = drag.value;
+  if (!active) return;
+  drag.value = { paint: active.paint, list: applySelection(active.list, [item], active.paint) };
+}
+
+function endDrag() {
+  const active = drag.value;
+  if (!active) return;
+  drag.value = null;
+  suppressClickAt.value = Date.now();
+  const list = [...active.list];
+  emit('update', { mode: 'specific', list, from: list[0] });
+}
+
+/** 划过栅格上下边缘时自动滚动，方便一次框完秒字段的 0-59 */
+function autoScrollWhileDragging(event: MouseEvent) {
+  if (!drag.value) return;
+  const el = gridRef.value;
+  if (!el || el.scrollHeight <= el.clientHeight + 1) return;
+  const rect = el.getBoundingClientRect();
+  const edge = 24;
+  if (event.clientY < rect.top + edge) el.scrollTop -= 16;
+  else if (event.clientY > rect.bottom - edge) el.scrollTop += 16;
+}
+
 function toggleGridValue(item: number) {
   const current = props.value?.list ?? [];
-  // 至少保留一个值，否则该字段会变成空表达式
-  if (current.includes(item) && current.length === 1) return;
-  const next = current.includes(item) ? current.filter((entry) => entry !== item) : [...current, item];
-  emit('update', {
-    mode: 'specific',
-    list: next,
-    from: [...next].sort((a, b) => a - b)[0],
-  });
+  // 移空会被 applySelection 拒绝（字段不能为空），此时 next 与 current 完全一致
+  const next = applySelection(current, [item], !current.includes(item));
+  if (next.length === current.length && next.every((entry, i) => entry === current[i])) return;
+  emit('update', { mode: 'specific', list: next, from: next[0] });
 }
+
+/** 鼠标点选已被「按下起手 + 松手提交」覆盖，这里只服务键盘 Enter / 空格 */
+function clickGridValue(item: number) {
+  if (Date.now() - suppressClickAt.value < 150) return;
+  toggleGridValue(item);
+}
+
+onMounted(() => {
+  // pointerup 与 mouseup 都会到；第二次进来时 drag 已清空，天然去重
+  window.addEventListener('mouseup', endDrag);
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('blur', endDrag);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mouseup', endDrag);
+  window.removeEventListener('pointerup', endDrag);
+  window.removeEventListener('blur', endDrag);
+});
 
 function onRawInput(event: Event) {
   emitPatch({ raw: (event.target as HTMLInputElement).value });
@@ -111,27 +186,28 @@ function modeLabel(label: string, labelEn: string) {
     </div>
 
     <template v-if="mode === 'specific'">
-      <div class="ck-grid" :class="gridClass">
+      <div
+        ref="gridRef"
+        class="ck-grid"
+        :class="[gridClass, { 'is-dragging': drag !== null }]"
+        @mousemove="autoScrollWhileDragging"
+      >
         <button
           v-for="option in valueOptions"
           :key="option.value"
           type="button"
-          :aria-pressed="selectedList.includes(option.value)"
+          :aria-pressed="displayList.includes(option.value)"
           class="ck-check"
-          :class="{ 'is-active': selectedList.includes(option.value) }"
+          :class="{ 'is-active': displayList.includes(option.value) }"
           :disabled="disabled"
-          @click="toggleGridValue(option.value)"
+          @mousedown="beginDrag(option.value)"
+          @mouseenter="extendDrag(option.value)"
+          @click="clickGridValue(option.value)"
         >
           {{ locale === 'en-US' ? option.labelEn : option.label }}
         </button>
       </div>
-      <span class="ck-hint">
-        {{
-          selectedLabels.length
-            ? `已选 ${selectedLabels.length} 个：${selectedText}`
-            : '点击上方数值进行多选'
-        }}
-      </span>
+      <span class="ck-hint">{{ hintText }}</span>
     </template>
 
     <div v-if="mode === 'range'" class="ck-inline">

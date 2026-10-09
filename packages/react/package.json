@@ -1,6 +1,6 @@
 {
   "name": "cron-kit-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React 版 Cron 表达式可视化组件：可在表单与弹窗中配置，实时给出中文描述与最近运行时间，零运行时依赖。",
   "keywords": [
     "cron",
@@ -48,7 +48,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "cron-kit-core": "^0.1.0"
+    "cron-kit-core": "^0.2.0"
   },
   "peerDependencies": {
     "react": ">=17.0.0",

@@ -79,6 +79,7 @@ export {
   getModeOptions,
   createFieldValue,
   getValueOptions,
+  applySelection,
   previewField,
   getExpressionTokens,
   stringifyValueList,
@@ -113,4 +114,4 @@ export type { TemplateDefinition, CronTemplate } from './templates';
 export { TEMPLATE_DEFINITIONS, getTemplates, getAllTemplates } from './templates';
 
 /** 版本号 */
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';

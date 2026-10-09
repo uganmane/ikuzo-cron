@@ -1,6 +1,6 @@
 {
   "name": "cron-kit-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "零依赖的 Cron 表达式引擎：解析、校验、中文描述、可视化配置互转与最近执行时间计算，支持 Quartz / Spring / Linux Crontab / Node Cron 四种语法。",
   "keywords": [
     "cron",
